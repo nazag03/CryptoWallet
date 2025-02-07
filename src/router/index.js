@@ -11,11 +11,8 @@ const isAuthenticated = () => {
 const routes = [
   { path: '/', component: LoginView },
   { 
-    path: '/trade', 
+    path: '/TradeView', 
     component: TradeView, 
-    beforeEnter: (to, from, next) => {
-      isAuthenticated() ? next() : next('/');
-    }
   },
   { 
     path: '/history', 

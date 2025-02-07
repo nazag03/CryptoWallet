@@ -1,20 +1,36 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <nav>
+      <router-link to="/">Inicio</router-link>
+      <router-link to="/TradeView">Operar</router-link>
+    </nav>
+    <router-view />
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App'
+  name: "App",
 };
 </script>
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f4f4f4;
+<style scoped>
+#app {
+  text-align: center;
+  padding: 20px;
+}
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+nav a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+nav a:hover {
+  text-decoration: underline;
 }
 </style>

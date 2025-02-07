@@ -40,6 +40,7 @@
         }
       };
   
+
       const toggleMode = () => {
         isRegistering.value = !isRegistering.value;
       };
