@@ -7,10 +7,9 @@
         <h2>{{ crypto.name }} ({{ crypto.symbol.toUpperCase() }})</h2>
         <p>Precio actual: ${{ crypto.price }}</p>
         <button @click="openTrade(crypto, 'buy')">Comprar</button>
-        <button @click="openTrade(crypto, 'sell')" :disabled="!wallet[crypto.symbol]">
-          Vender
-        </button>
-        <p v-if="wallet[crypto.symbol]">Saldo: {{ wallet[crypto.symbol] }} {{ crypto.symbol.toUpperCase() }}</p>
+        <button @click="openTrade(crypto, 'sell')" :disabled="!wallet[crypto.symbol]">  Vender</button>
+
+        <p v-if="wallet[crypto.symbol]">Saldo: {{ wallet[crypto.symbol] }} {{ crypto.symbol.toUpperCase() }}</p> 
       </div>
     </div>
   </div>
@@ -18,6 +17,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useWalletStore } from '@/store/useWalletStore';
 import { fetchCryptoPrices } from '@/api/cryptoApi';
 
@@ -32,8 +32,7 @@ export default {
     ]);
     const loading = ref(true);
     const openTrade = (crypto, action) => {
-      // Aquí iría la lógica para abrir un modal o realizar la transacción
-      console.log(`${action} ${crypto.name}`);
+     
     };
 
     const fetchPrices = async () => {
@@ -49,11 +48,11 @@ export default {
     };
 
     onMounted(fetchPrices);
-
+    const wallet = computed(() => walletStore.wallet || {});
     return {
       cryptos,
       loading,
-      wallet: walletStore.wallet,
+      wallet,
       openTrade
     };
   }
