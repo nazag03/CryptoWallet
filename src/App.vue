@@ -3,6 +3,7 @@
     <nav>
       <router-link to="/">Inicio</router-link>
       <router-link to="/TradeView">Operar</router-link>
+      <router-link to="/history">Historial</router-link> 
     </nav>
     <router-view />
   </div>

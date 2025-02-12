@@ -17,9 +17,7 @@ const routes = [
   { 
     path: '/history', 
     component: HistoryView, 
-    beforeEnter: (to, from, next) => {
-      isAuthenticated() ? next() : next('/');
-    }
+   
   },
   { 
     path: '/analysis', 

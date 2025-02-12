@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useWalletStore = defineStore('wallet', () => {
-  const balance = ref(10000); // Saldo inicial en USD
+  const balance = ref(10000); 
   const transactions = ref([]);
   const cryptocurrencies = ref([
     { id: 'BTC', name: 'Bitcoin', quantity: 0, price: 30000 },
