@@ -1,18 +1,38 @@
 <template>
-    <div>
-      <h1>Analysis</h1>
-      <!-- Aquí iría el contenido relacionado con el analisis -->
+  <div>
+    <h1>Análisis de Portafolio</h1>
+    <div v-if="loading">Cargando datos...</div>
+    <div v-else>
+      <CryptoPriceChart
+        v-for="crypto in cryptocurrencies"
+        :key="crypto.id"
+        :cryptoName="crypto.name"
+        :cryptoSymbol="crypto.id"
+        :historicalData="cryptoPrices[crypto.id] || []"
+      />
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'AnalysisView',
-    // Aquí puedes añadir cualquier lógica relacionada con esta vista
-  };
-  </script>
-  
-  <style scoped>
-  /* Aquí van los estilos específicos de esta vista */
-  </style>
-  
+  </div>
+</template>
+
+<script>
+import { computed, onMounted } from "vue";
+import { useWalletStore } from "../store/useWalletStore";
+import CryptoPriceChart from "../components/CryptoPriceChart.vue";
+
+export default {
+  components: { CryptoPriceChart },
+  setup() {
+    const walletStore = useWalletStore();
+
+    onMounted(() => {
+      walletStore.fetchHistoricalPrices();
+    });
+
+    return {
+      cryptocurrencies: computed(() => walletStore.cryptocurrencies),
+      cryptoPrices: computed(() => walletStore.cryptoPrices),
+      loading: computed(() => walletStore.loading)
+    };
+  }
+};
+</script>

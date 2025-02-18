@@ -22,10 +22,9 @@ const routes = [
   { 
     path: '/analysis', 
     component: AnalysisView, 
-    beforeEnter: (to, from, next) => {
-      isAuthenticated() ? next() : next('/');
-    }
+    
   }
+  
 ];
 
 const router = createRouter({

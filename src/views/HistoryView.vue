@@ -6,9 +6,11 @@
     </div>
     <div v-else class="transactions-list">
       <div v-for="(transaction, index) in walletStore.transactions" :key="index" class="transaction-card">
-        <p><strong>Criptomoneda: {{ transaction.cryptoName || 'Desconocida' }}</strong></p>
+        <p><strong>Fecha y Hora: {{ transaction.dateTime }}</strong></p>
+        <p><strong>Criptomoneda: {{ transaction.cryptoName }}</strong></p>
         <p>Tipo: {{ transaction.type === 'buy' ? 'Compra' : 'Venta' }}</p>
         <p>Cantidad: {{ transaction.quantity }}</p>
+        <p>Precio Unitario: ${{ transaction.price }} USD</p>
         <p>Precio Total: ${{ transaction.total.toFixed(2) }} USD</p>
       </div>
     </div>
