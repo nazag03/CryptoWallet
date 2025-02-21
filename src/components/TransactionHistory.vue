@@ -1,55 +1,66 @@
 <template>
-  <div class="transaction-history">
-    <h3>Historial de Transacciones</h3>
-    <ul>
-      <li v-for="(transaction, index) in transactions" :key="index">
-        <button @click="selectTransaction(transaction)">
-          <strong>{{ transaction.dateTime }}</strong> <br>
-          <strong>{{ transaction.type === 'buy' ? 'Compra' : 'Venta' }}</strong>: 
-          {{ transaction.quantity }} {{ transaction.cryptoName }} <br>
-          Precio: ${{ transaction.price }} USD | Total: ${{ transaction.total.toFixed(2) }} USD
-        </button>
-      </li>
-    </ul>
+  <div>
+    <h2>Historial de Transacciones</h2>
+    <div v-for="transaction in walletStore.transactions" :key="transaction.transactionId">
+      <p>
+        {{ transaction.cryptoName }} - 
+        {{ transaction.quantity }} unidades - 
+        ${{ transaction.total.toFixed(2) }} 
+        ({{ transaction.type === 'buy' ? 'Compra' : 'Venta' }})
+      </p>
+      <button @click="startEdit(transaction)">Editar</button>
+      <button @click="walletStore.removeTransaction(transaction.transactionId)">Eliminar</button>
+    </div>
+
+    <!-- Formulario de edición -->
+    <div v-if="editingTransaction">
+      <h3>Editar Transacción</h3>
+      <label for="editQuantity">Cantidad:</label>
+      <input v-model.number="editQuantity" type="number" step="0.0001" min="0.0001" />
+
+      <p>Total: ${{ newTotal.toFixed(2) }}</p>
+
+      <button @click="saveEdit">Guardar</button>
+      <button @click="cancelEdit">Cancelar</button>
+    </div>
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    transactions: Array,
-  },
-  methods: {
-    selectTransaction(transaction) {
-      this.$emit("transactionSelected", transaction);
-    },
-  },
+<script setup>
+import { ref, computed } from 'vue';
+import { useWalletStore } from '@/store/useWalletStore';
+
+const walletStore = useWalletStore();
+const editingTransaction = ref(null);
+const editQuantity = ref(0);
+
+// Calcula el nuevo total basado en la cantidad editada
+const newTotal = computed(() => {
+  if (!editingTransaction.value) return 0;
+  return editQuantity.value * editingTransaction.value.price;
+});
+
+const startEdit = (transaction) => {
+  editingTransaction.value = { ...transaction };
+  editQuantity.value = transaction.quantity;
+};
+
+const saveEdit = () => {
+  if (!editingTransaction.value || editQuantity.value <= 0) {
+    alert('Ingrese una cantidad válida.');
+    return;
+  }
+
+  walletStore.editTransaction({
+    ...editingTransaction.value,
+    quantity: parseFloat(editQuantity.value),
+    total: newTotal.value
+  });
+
+  editingTransaction.value = null;
+};
+
+const cancelEdit = () => {
+  editingTransaction.value = null;
 };
 </script>
-
-<style scoped>
-.transaction-history {
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-ul {
-  list-style: none;
-  padding: 0;
-}
-li {
-  margin-bottom: 10px;
-}
-button {
-  width: 100%;
-  text-align: left;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #f5f5f5;
-}
-</style>

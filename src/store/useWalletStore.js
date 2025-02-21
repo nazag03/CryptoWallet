@@ -2,10 +2,7 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 
 export const useWalletStore = defineStore('wallet', () => {
-  // El ID del usuario actualmente logueado
   const currentUser = ref(null);
-
-  // Datos financieros
   const balance = ref(10000);
   const transactions = ref([]);
   const cryptocurrencies = ref([
@@ -15,13 +12,12 @@ export const useWalletStore = defineStore('wallet', () => {
     { id: 'LTC', name: 'Litecoin', quantity: 0, price: 150 },
   ]);
 
-  // 1) Asignar un usuario y cargar sus datos
+  // Funciones existentes para cargar y guardar datos del usuario
   function setUser(userId) {
     currentUser.value = userId;
-    loadUserData(); // Cargar los datos desde localStorage
+    loadUserData();
   }
 
-  // 2) Cargar datos desde localStorage, usando el userId como parte de la clave
   function loadUserData() {
     if (!currentUser.value) {
       resetStoreData();
@@ -42,15 +38,14 @@ export const useWalletStore = defineStore('wallet', () => {
     }
   }
 
-  // 3) Guardar datos en localStorage
   function saveUserData() {
-    if (!currentUser.value) return; // Si no hay usuario, no guardamos
+    if (!currentUser.value) return;
     localStorage.setItem(`transactions_${currentUser.value}`, JSON.stringify(transactions.value));
     localStorage.setItem(`balance_${currentUser.value}`, balance.value.toString());
     localStorage.setItem(`cryptos_${currentUser.value}`, JSON.stringify(cryptocurrencies.value));
   }
 
-  // Restablecer la cantidad de criptomonedas a 0 (manteniendo los precios)
+  // Función para restablecer cantidades de criptomonedas
   function resetCryptoQuantities() {
     cryptocurrencies.value = cryptocurrencies.value.map(crypto => ({
       ...crypto,
@@ -58,7 +53,7 @@ export const useWalletStore = defineStore('wallet', () => {
     }));
   }
 
-  // Restablecer todos los datos a sus valores iniciales
+  // Función para restablecer los datos cuando el usuario cierra sesión
   function resetStoreData() {
     balance.value = 10000;
     transactions.value = [];
@@ -70,13 +65,13 @@ export const useWalletStore = defineStore('wallet', () => {
     ];
   }
 
-  // Logout: Limpia el usuario actual y resetea los datos
+  // Función para cerrar sesión
   function logout() {
     currentUser.value = null;
     resetStoreData();
   }
 
-  // 4) Añadir transacción (compra/venta) y actualizar el balance
+  // Función para agregar una nueva transacción
   function addTransaction(transaction) {
     const crypto = cryptocurrencies.value.find(c => c.id === transaction.cryptoId);
     if (!crypto) {
@@ -84,6 +79,7 @@ export const useWalletStore = defineStore('wallet', () => {
       return;
     }
 
+    // Agregar la transacción con el precio de la criptomoneda
     if (transaction.type === 'buy') {
       if (balance.value < transaction.total) {
         console.error('Saldo insuficiente');
@@ -101,23 +97,77 @@ export const useWalletStore = defineStore('wallet', () => {
     }
 
     transactions.value.push({
+      transactionId: Date.now(),
       dateTime: new Date().toLocaleString(),
       cryptoId: transaction.cryptoId,
       cryptoName: crypto.name,
       type: transaction.type,
       quantity: transaction.quantity,
       total: transaction.total,
-      price: crypto.price,
+      price: crypto.price, // Guardar el precio de la criptomoneda al momento de la transacción
     });
 
-    // Guardar inmediatamente después de cada transacción
     saveUserData();
   }
 
-  // Computed para mostrar el balance con 2 decimales
+  // Función para eliminar una transacción
+  function removeTransaction(transactionId) {
+    const transaction = transactions.value.find(t => t.transactionId === transactionId);
+    if (!transaction) return;
+
+    const crypto = cryptocurrencies.value.find(c => c.id === transaction.cryptoId);
+    if (!crypto) return;
+
+    // Revertir los efectos de la transacción utilizando el precio guardado
+    if (transaction.type === 'buy') {
+      balance.value += transaction.total;
+      crypto.quantity -= transaction.quantity;
+    } else if (transaction.type === 'sell') {
+      balance.value -= transaction.total;
+      crypto.quantity += transaction.quantity;
+    }
+
+    // Eliminar la transacción
+    transactions.value = transactions.value.filter(t => t.transactionId !== transactionId);
+    saveUserData();
+  }
+
+  // Función para editar una transacción
+  function editTransaction(updatedTransaction) {
+    const index = transactions.value.findIndex(t => t.transactionId === updatedTransaction.transactionId);
+    if (index === -1) return;
+
+    const oldTransaction = transactions.value[index];
+    const crypto = cryptocurrencies.value.find(c => c.id === oldTransaction.cryptoId);
+    if (!crypto) return;
+
+    // Revertir los efectos de la transacción anterior utilizando el precio guardado
+    if (oldTransaction.type === 'buy') {
+      balance.value += oldTransaction.total;
+      crypto.quantity -= oldTransaction.quantity;
+    } else if (oldTransaction.type === 'sell') {
+      balance.value -= oldTransaction.total;
+      crypto.quantity += oldTransaction.quantity;
+    }
+
+    // Aplicar los cambios de la nueva transacción
+    transactions.value[index] = { ...oldTransaction, ...updatedTransaction };
+
+    if (updatedTransaction.type === 'buy') {
+      balance.value -= updatedTransaction.total;
+      crypto.quantity += updatedTransaction.quantity;
+    } else if (updatedTransaction.type === 'sell') {
+      balance.value += updatedTransaction.total;
+      crypto.quantity -= updatedTransaction.quantity;
+    }
+
+    saveUserData();
+  }
+
+  // Función para obtener el balance formateado
   const formattedBalance = computed(() => balance.value.toFixed(2));
 
-  // Opcional: Observar cambios en currentUser y cargar/guardar datos
+  // Escucha cambios en el usuario para cargar sus datos
   watch(currentUser, (newVal, oldVal) => {
     if (newVal && newVal !== oldVal) {
       loadUserData();
@@ -125,13 +175,11 @@ export const useWalletStore = defineStore('wallet', () => {
   });
 
   return {
-    // Estado
     currentUser,
     balance,
     transactions,
     cryptocurrencies,
 
-    // Métodos
     setUser,
     loadUserData,
     saveUserData,
@@ -139,8 +187,9 @@ export const useWalletStore = defineStore('wallet', () => {
     resetCryptoQuantities,
     logout,
     addTransaction,
+    removeTransaction,
+    editTransaction,
 
-    // Computed
     formattedBalance,
   };
 });
